@@ -257,6 +257,14 @@ class HandInterface:
         self.f1 = f1
         self.f2 = f2
         self.f3 = f3
+
+
+        index_f_pinch_slope = (ps[2,2] - ps[2,1]) *2.1
+        middle_f_pinch_slope = (ps[3,2] - ps[3,1])*2.1
+        thumb_pinch_slope = (ps[1,2] - ps[1,1]) * 1.3  #minus
+        self.pinch_slope = [0,thumb_pinch_slope,middle_f_pinch_slope,index_f_pinch_slope]
+
+
         #f0[0,0]
         #f0[0,1]
         #f0[0,2]
@@ -278,10 +286,28 @@ class HandInterface:
         f3 = self.f3
         a0 = self.a0
 
-        desired_pos[0] = self.ps[0, 2]  + int(f0[0,0]*q[0]*q[0] + f0[1,0]*q[0] + f0[2,0])
-        desired_pos[1] = init_pos[1] + int( -f1[1]/((-q[1] - a0[1]) + f1[0]) + f1[2] )   #Minus data !!!
-        desired_pos[2] = init_pos[2] + int( -f2[1]/((q[2] - a0[2]) + f2[0]) + f2[2] )
-        desired_pos[3] = init_pos[3] + int( -f3[1]/((q[3] - a0[3]) + f3[0]) + f3[2] ) 
+        a = self.a
+        pinch_slope = self.pinch_slope
+        threshold = 0.3
+        ring_f_mcp = input_pose[14]
+        little_f_mcp = input_pose[10]
+
+        if ring_f_mcp > threshold and little_f_mcp > threshold and self.current_dxl_joints[0] > 2500:         # pinch mode
+            flexion_rate = (q[2] - a0[2]) / (a[2] - a0[2])
+            
+            desired_pos[0] = 2700           #abduction
+            desired_pos[1] = init_pos[1] + int(pinch_slope[1] * flexion_rate)
+            desired_pos[2] = init_pos[2] + int(pinch_slope[2] * flexion_rate)
+            desired_pos[3] = init_pos[3] + int(pinch_slope[3] * flexion_rate)
+            for i in range(1,4):
+                if desired_pos[i] > self.ps[i,0] + self.ps[i,1]:
+                    desired_pos[i] = self.ps[i,0] + self.ps[i,1]
+
+        else:
+            desired_pos[0] = self.ps[0, 2]  + int(f0[0,0]*q[0]*q[0] + f0[1,0]*q[0] + f0[2,0])
+            desired_pos[1] = init_pos[1] + int( -f1[1]/((-q[1] - a0[1]) + f1[0]) + f1[2] )   #Minus data !!!
+            desired_pos[2] = init_pos[2] + int( -f2[1]/((q[2] - a0[2]) + f2[0]) + f2[2] )
+            desired_pos[3] = init_pos[3] + int( -f3[1]/((q[3] - a0[3]) + f3[0]) + f3[2] ) 
 
         if desired_pos[0] < 1000 :
             desired_pos[0] = 1689

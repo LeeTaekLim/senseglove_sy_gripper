@@ -231,9 +231,9 @@ class HandInterface:
         self.f2 = f2
         self.f3 = f3
 
-        index_f_pinch_slope = (ps[2,2] - ps[2,1]) / (a[2] - a0[2]) *2.1
-        middle_f_pinch_slope = (ps[3,2] - ps[3,1]) / (a[3] - a0[3])*2.1
-        thumb_pinch_slope = (ps[1,2] - ps[1,1]) / (a[1] - a0[1]) * 1.3  #minus
+        index_f_pinch_slope = (ps[2,2] - ps[2,1]) *2.1
+        middle_f_pinch_slope = (ps[3,2] - ps[3,1])*2.1
+        thumb_pinch_slope = (ps[1,2] - ps[1,1]) * 1.3  #minus
         self.pinch_slope = [0,thumb_pinch_slope,middle_f_pinch_slope,index_f_pinch_slope]
 
         #f0[0,0]
@@ -253,7 +253,7 @@ class HandInterface:
         f2 = self.f2
         f3 = self.f3
         a0 = self.a0
-
+        a = self.a
         q = self.filtered_glove_joint
 
 
@@ -264,10 +264,12 @@ class HandInterface:
         # print(q[0])
 
         if ring_f_mcp > threshold and little_f_mcp > threshold and self.current_dxl_joints[0] > 2500:         # pinch mode
+            flexion_rate = (q[2] - a0[2]) / (a[2] - a0[2])
+            
             desired_pos[0] = 2700           #abduction
-            desired_pos[1] = init_pos[1] + int(pinch_slope[1] * (-q[1] - a0[1]))       #minus
-            desired_pos[2] = init_pos[2] + int(pinch_slope[2] * (q[2] - a0[2]))
-            desired_pos[3] = init_pos[3] + int(pinch_slope[3] * (q[3] - a0[3]))
+            desired_pos[1] = init_pos[1] + int(pinch_slope[1] * flexion_rate)
+            desired_pos[2] = init_pos[2] + int(pinch_slope[2] * flexion_rate)
+            desired_pos[3] = init_pos[3] + int(pinch_slope[3] * flexion_rate)
             for i in range(1,4):
                 if desired_pos[i] > ps[i,0] + ps[i,1]:
                     desired_pos[i] = ps[i,0] + ps[i,1]
